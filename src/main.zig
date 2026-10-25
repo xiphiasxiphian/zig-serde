@@ -16,7 +16,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    const value = TestType { .boolean = false, .number = 42, .data = .{ .x = 5, .y = 6 }, .numbers = [_]u8{ 1, 2, 3, 4, 5 } };
+    const value = TestType{ .boolean = false, .number = 42, .data = .{ .x = 5, .y = 6 }, .numbers = [_]u8{ 1, 2, 3, 4, 5 } };
     const tokens = try zig_serde.serialize(value, allocator);
 
     for (tokens.items) |token| {

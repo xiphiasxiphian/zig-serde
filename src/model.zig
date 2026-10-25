@@ -41,7 +41,7 @@ pub const Token = union(enum) {
                         .{ @tagName(tag), val.name, val.count },
                     );
                 } else if (T == []const u8) {
-                    try writer.print(".{s} = \"{s}\"", .{@tagName(tag), val});
+                    try writer.print(".{s} = \"{s}\"", .{ @tagName(tag), val });
                 } else if (T == void) {
                     try writer.print(".{s}", .{@tagName(tag)});
                 } else {
