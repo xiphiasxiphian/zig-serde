@@ -29,6 +29,8 @@ const Value = union(enum) {
                 return .{ .int = @intCast(value) };
             },
             .u64 => |value| {
+                // handle this integer type explicitly different,
+                // as theoretically it can overflow
                 if (value >= std.math.maxInt(i64)) {
                     return error.IntegerOverflow;
                 }
@@ -69,6 +71,25 @@ const Value = union(enum) {
 const Field = struct {
     key: []const u8,
     value: Value,
+
+    const Self = @This();
+
+    pub fn parse(allocator: Allocator, stream: *root.TokenStream) !Self {
+        // a field should first have a id ...
+        const id_token = stream.next() orelse return error.MissingToken;
+        const key = switch (id_token) {
+            .id => |value| value,
+            else => return error.MalformedTokenStream,
+        };
+
+        // ... then have a value
+        const value = try Value.parse(allocator, stream);
+
+        return .{
+            .key = key,
+            .value = value,
+        };
+    }
 };
 
 const Object = struct {
