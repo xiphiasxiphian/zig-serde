@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 pub const model = @import("model.zig");
 pub const json = @import("json.zig");
 
-
 const Token = model.Token;
 
 pub fn tokenize(value: anytype, allocator: Allocator) !std.ArrayList(Token) {

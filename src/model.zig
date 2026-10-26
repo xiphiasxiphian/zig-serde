@@ -52,8 +52,8 @@ pub const Token = union(enum) {
     }
 
     pub fn eql(self: Token, other: Token) bool {
-            return std.meta.eql(self, other);
-        }
+        return std.meta.eql(self, other);
+    }
 };
 
 pub fn serializeValue(value: anytype, allocator: Allocator, tokens: *std.ArrayList(Token)) !void {

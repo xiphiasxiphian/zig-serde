@@ -76,15 +76,7 @@ const Value = union(enum) {
         }
     }
 
-    fn parseGroup(
-        comptime T: type,
-        allocator: Allocator,
-        stream: *root.TokenStream,
-        header: Group,
-        tail: Token,
-        comptime func: fn(Allocator, *root.TokenStream) anyerror!T
-    ) ![]const T
-    {
+    fn parseGroup(comptime T: type, allocator: Allocator, stream: *root.TokenStream, header: Group, tail: Token, comptime func: fn (Allocator, *root.TokenStream) anyerror!T) ![]const T {
         var values = try allocator.alloc(T, header.count);
         errdefer allocator.free(values);
 
@@ -235,7 +227,9 @@ const Document = struct {
                 else => null,
             };
 
-            if (escape == null and chr >= character_start_limit) { continue; }
+            if (escape == null and chr >= character_start_limit) {
+                continue;
+            }
 
             try writer.writeAll(string[cursor..i]);
             cursor = i + 1;
