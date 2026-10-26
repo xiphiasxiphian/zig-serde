@@ -17,9 +17,14 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const value = TestType{ .boolean = false, .number = 42, .data = .{ .x = 5, .y = 6 }, .numbers = [_]u8{ 1, 2, 3, 4, 5 } };
-    const tokens = try zig_serde.serialize(value, allocator);
+    const tokens = try zig_serde.tokenize(value, allocator);
 
     for (tokens.items) |token| {
         std.debug.print("{f}\n", .{token});
     }
+
+    const result = try zig_serde.json.serialize(value, allocator);
+    defer allocator.free(result);
+
+    std.debug.print("\n{s}\n", .{result});
 }
