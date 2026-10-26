@@ -3,6 +3,7 @@ const Allocator = std.mem.Allocator;
 
 const root = @import("root.zig");
 const Token = root.model.Token;
+const Group = root.model.Group;
 
 pub fn serialize(value: anytype, allocator: Allocator) ![]const u8 {
     const tokens = try root.serialize(value, allocator);
@@ -39,32 +40,63 @@ const Value = union(enum) {
             .f32, .f64 => |value| {
                 return .{ .float = @floatCast(value) };
             },
-            .sequence => |group| {
-                var values = try allocator.alloc(Value, group.count);
-                errdefer allocator.free(values);
-
-                var index = 0;
-                while (stream.peek() != .sequence_end) {
-                    if (index >= group.count) {
-                        return error.MalformedTokenStream;
-                    }
-
-                    const val = try Value.parse(allocator, stream);
-                    values[index] = val;
-
-                    index += 1;
-                }
-
-                // this should be the end of the sequence. if not, the token stream is
-                // malformed
-                if (stream.next() != .sequence_end) {
-                    return error.MalformedTokenStream;
-                }
+            .sequence => |header| {
+                const values = Value.parseGroup(
+                    Value,
+                    allocator,
+                    stream,
+                    header,
+                    .sequence_end,
+                    Value.parse,
+                );
 
                 return .{ .array = values };
             },
+            .structure => |header| {
+                const fields = Value.parseGroup(
+                    Field,
+                    allocator,
+                    stream,
+                    header,
+                    .structure_end,
+                    Field.parse,
+                );
+
+                return .{ .object = .{ .fields = fields } };
+            },
             else => return error.InvalidTokenStream,
         }
+    }
+
+    fn parseGroup(
+        comptime T: type,
+        allocator: Allocator,
+        stream: *root.TokenStream,
+        header: Group,
+        tail: Token,
+        comptime func: fn(Allocator, *root.TokenStream) anyerror!T
+    ) ![]const T
+    {
+        var values = try allocator.alloc(T, header.count);
+        errdefer allocator.free(values);
+
+        var index = 0;
+        while (stream.peek() != tail) {
+            if (index >= header.count) {
+                return error.MalformedTokenStream;
+            }
+
+            const val = try func(allocator, stream);
+            values[index] = val;
+
+            index += 1;
+        }
+
+        if (stream.next() != tail) {
+            return error.MalformedTokenStream;
+        }
+
+        return values;
     }
 };
 
